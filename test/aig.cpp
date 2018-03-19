@@ -42,4 +42,5 @@ TEST_CASE( "aig_graph", "[aig]" )
   CHECK( aig.inputs().size() == 3 );
   CHECK( aig.latches().size() == 0 );
   CHECK( aig.outputs().size() == 1 );
+
 }
