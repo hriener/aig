@@ -30,5 +30,16 @@
 using namespace aig;
 
 TEST_CASE( "aig_graph", "[aig]" )
-{ 
+{
+  aig_graph aig( "aig" );
+  auto a = aig.create_pi( "a" );
+  auto b = aig.create_pi( "b" );
+  auto c = aig.create_pi( "c" );
+  auto n = aig.create_and( a, aig.create_and( b, c ) );
+  aig.create_po( n, "out" );
+
+  CHECK( aig.size() == 6 );
+  CHECK( aig.inputs().size() == 3 );
+  CHECK( aig.latches().size() == 0 );
+  CHECK( aig.outputs().size() == 1 );
 }

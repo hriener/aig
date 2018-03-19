@@ -40,6 +40,10 @@
 namespace util
 {
 
+/******************************************************************************
+ * dirty                                                                      *
+ ******************************************************************************/
+
 template<typename T>
 class dirty
 {
@@ -156,6 +160,10 @@ aig_function aig_function::operator^( bool value ) const
 {
   return aig_function( node, complemented != value );
 }
+
+/******************************************************************************
+ * aig_node_info                                                              *
+ ******************************************************************************/
 
 struct aig_node_info
 {
@@ -505,23 +513,6 @@ void aig_graph::create_po( const aig_function& f, const std::string& name )
   _outputs.push_back( {f, name} );
   _info[f.node].is_output = 1;
 }
-
-// void aig_graph::create_lo( const aig_function& f, const aig_function& next, bool initial_value )
-// {
-//   _latch_output_functions.make_dirty();
-//   _info[next.node].next = f;
-//   _info[next.node].reset = uint32_t(initial_value);
-// }
-
-// aig_function aig_graph::create_lio( const aig_function& f, bool initial_value, const std::string& name )
-// {
-//   _latches_input_nodes.make_dirty();
-//   _latch_output_functions.make_dirty();
-//   const auto node = _info.size();
-//   _info.emplace_back( f, initial_value );
-//   _latches.emplace_back( node, name );
-//   return aig_function( node );
-// }
 
 void aig_graph::create_latch( const aig_function& curr, const aig_function& next, bool default_value )
 {
