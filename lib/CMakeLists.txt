@@ -5,5 +5,4 @@ target_compile_definitions(aig_fmt INTERFACE FMT_HEADER_ONLY)
 add_library(aig_cli11 INTERFACE)
 target_include_directories(aig_cli11 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cli11)
 
-add_library(aig_lorina INTERFACE)
-target_include_directories(aig_lorina INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/lorina/include)
+add_subdirectory(lorina)
