@@ -220,7 +220,6 @@ public:
   using input_vec_t = std::vector<std::pair<aig_node,std::string>>;
   using latch_vec_t = std::vector<std::pair<aig_node,std::string>>;
   using output_vec_t = std::vector<std::pair<aig_function,std::string>>;
-  using target_point_vec_t = std::vector<std::pair<aig_node,std::string>>;
   using and_strash_key_t = std::tuple<aig_function, aig_function>;
   using node_vec_t = std::vector<aig_node>;
   using func_vec_t = std::vector<aig_function>;
@@ -274,8 +273,6 @@ public:
   const input_vec_t& inputs() const;
   latch_vec_t& latches();
   const latch_vec_t& latches() const;
-  target_point_vec_t& target_points();
-  const target_point_vec_t& target_points() const;
   output_vec_t& outputs();
   const output_vec_t& outputs() const;
   const aig_node_info& operator[](aig_node node) const;
@@ -291,7 +288,6 @@ public:
   const node_vec_t& latches_input_nodes() const;
   const func_vec_t& output_functions() const;
   const func_vec_t& latch_output_functions() const;
-  const node_vec_t& target_point_nodes() const;
   const std::vector<node_vec_t>& parents() const;
   const node_vec_t& topological_nodes() const;
 
