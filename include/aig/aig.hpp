@@ -717,6 +717,10 @@ std::vector<aig_function> aig_graph::children(aig_node node) const
   {
     return { _info[node].left, _info[node].right };
   }
+  else if ( _info[node].type == aig_type::_latch )
+  {
+    return { _info[node].next };
+  }
   else
   {
     return {};
