@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Options
-option(AIG_EXAMPLES "Build examples" ON)
 option(AIG_BENCH "Build benchmarks" ON)
 option(AIG_TEST "Build tests" ON)
 
@@ -20,10 +19,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 add_subdirectory(lib)
 add_subdirectory(include)
-
-if(AIG_EXAMPLES)
-  add_subdirectory(examples)
-endif()
 
 if(AIG_BENCH)
   add_subdirectory(bench)
