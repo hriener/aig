@@ -29,7 +29,7 @@
 
 using namespace aig;
 
-TEST_CASE( "aig_graph", "[aig]" )
+TEST_CASE( "combinational", "[aig]" )
 {
   aig_graph aig( "aig" );
   auto a = aig.create_pi( "a" );
@@ -42,5 +42,34 @@ TEST_CASE( "aig_graph", "[aig]" )
   CHECK( aig.inputs().size() == 3 );
   CHECK( aig.latches().size() == 0 );
   CHECK( aig.outputs().size() == 1 );
+}
 
+TEST_CASE( "sequential", "[aig]" )
+{
+  aig_graph aig( "aig" );
+
+  /* cell #0 */
+  auto in0 = aig.create_pi( "in0" );
+  auto p0 = aig.create_pi( "p0" );
+  auto q0 = aig.create_pi( "q0" );
+  auto l0 = aig.create_li( "l0" );
+  auto f0 = aig.create_ite( p0, in0, l0 );
+  aig.create_latch( l0, f0, false );
+  auto f1 = aig.create_ite( q0, l0, aig.get_constant( false ) );
+  aig.create_po( f1, "out0" );
+
+  /* cell #1 */
+  auto in1 = aig.create_pi( "in1" );
+  auto p1 = aig.create_pi( "p1" );
+  auto q1 = aig.create_pi( "q1" );
+  auto l1 = aig.create_li( "l1" );
+  auto f2 = aig.create_ite( p1, in1, l1 );
+  aig.create_latch( l1, f2, true );
+  auto f3 = aig.create_ite( q1, l1, aig.get_constant( false ) );
+  aig.create_po( f3, "out1" );
+
+  CHECK( aig.size() == 17 );
+  CHECK( aig.inputs().size() == 6 );
+  CHECK( aig.latches().size() == 2 );
+  CHECK( aig.outputs().size() == 2 );
 }
