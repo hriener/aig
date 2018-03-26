@@ -187,8 +187,9 @@ public:
     {
       aig_type type       : 8;
       uint32_t is_output  : 1;
+      uint32_t is_bad     : 1;
       uint32_t reset      : 1;
-      uint32_t unused     : 22;
+      uint32_t unused     : 21;
     };
   };
 }; /* aig_node_info */
@@ -196,6 +197,7 @@ public:
 aig_node_info::aig_node_info( aig_type type )
   : type(type)
   , is_output(0u)
+  , is_bad(0u)
   , unused(0u)
 {
 }
@@ -205,6 +207,7 @@ aig_node_info::aig_node_info( const aig_function& left, const aig_function& righ
   , right(right)
   , type(aig_type::_and)
   , is_output(0u)
+  , is_bad(0u)
   , unused(0u)
 {
 }
@@ -214,6 +217,7 @@ aig_node_info::aig_node_info( const aig_function& next, bool initial_value )
   , right(0u)
   , type(aig_type::_latch)
   , is_output(0u)
+  , is_bad(0u)
   , reset(uint32_t(initial_value))
   , unused(0u)
 {
@@ -229,6 +233,7 @@ public:
   using input_vec_t = std::vector<std::pair<aig_node,std::string>>;
   using latch_vec_t = std::vector<std::pair<aig_node,std::string>>;
   using output_vec_t = std::vector<std::pair<aig_function,std::string>>;
+  using bad_state_vec_t = std::vector<std::pair<aig_function,std::string>>;
   using and_strash_key_t = std::tuple<aig_function, aig_function>;
   using node_vec_t = std::vector<aig_node>;
   using func_vec_t = std::vector<aig_function>;
@@ -252,6 +257,7 @@ public:
   void compute_input_nodes() const;
   void compute_latches_input_nodes() const;
   void compute_output_functions() const;
+  void compute_bad_state_functions() const;
   void compute_latch_output_functions() const;
   void compute_parents() const;
   void compute_toporder() const;
@@ -261,6 +267,7 @@ public:
   aig_function create_pi( const std::string& name = std::string() );
   aig_function create_li( const std::string& name = std::string() );
   void create_po( const aig_function& f, const std::string& name );
+  void create_bad_state( const aig_function& f, const std::string& name );
   void create_latch( const aig_function& curr, const aig_function& next, bool default_value );
 
   aig_function create_and( const aig_function& left, const aig_function& right );
@@ -284,6 +291,9 @@ public:
   const latch_vec_t& latches() const;
   output_vec_t& outputs();
   const output_vec_t& outputs() const;
+  bad_state_vec_t& bad_states();
+  const bad_state_vec_t& bad_states() const;
+
   const aig_node_info& operator[](aig_node node) const;
   aig_node_info& operator[](aig_node node);
   func_vec_t children(aig_node node) const;
@@ -296,6 +306,7 @@ public:
   const node_vec_t& input_nodes() const;
   const node_vec_t& latches_input_nodes() const;
   const func_vec_t& output_functions() const;
+  const func_vec_t& bad_state_functions() const;
   const func_vec_t& latch_output_functions() const;
   const std::vector<node_vec_t>& parents() const;
   const node_vec_t& topological_nodes() const;
@@ -307,10 +318,12 @@ protected:
   input_vec_t _inputs;
   latch_vec_t _latches;
   output_vec_t _outputs;
+  bad_state_vec_t _bad_states;
   and_strash_map_t _and_strash;
   mutable util::dirty<node_vec_t>              _input_nodes;
   mutable util::dirty<node_vec_t>              _latches_input_nodes;
   mutable util::dirty<func_vec_t>              _output_functions;
+  mutable util::dirty<func_vec_t>              _bad_state_functions;
   mutable util::dirty<func_vec_t>              _latch_output_functions;
   mutable util::dirty<node_vec_t>              _toporder;
   mutable util::dirty<std::vector<node_vec_t>> _parents;
@@ -357,6 +370,18 @@ void aig_graph::compute_output_functions() const
                   [](const output_vec_t::value_type& v) { return v.first; } );
   assert( _output_functions->size() == _outputs.size() );
   _output_functions.make_clean();
+}
+
+void aig_graph::compute_bad_state_functions() const
+{
+  /* no other properties required */
+  if ( !_bad_state_functions.is_dirty() ) return;
+  _bad_state_functions->clear();
+  _bad_state_functions->reserve( _bad_states.size() );
+  std::transform( _bad_states.begin(), _bad_states.end(), std::back_inserter( *_bad_state_functions ),
+                  [](const bad_state_vec_t::value_type& v) { return v.first; } );
+  assert( _bad_state_functions->size() == _bad_states.size() );
+  _bad_state_functions.make_clean();
 }
 
 void aig_graph::compute_latch_output_functions() const
@@ -479,6 +504,12 @@ const aig_graph::func_vec_t& aig_graph::output_functions() const
   return *_output_functions;
 }
 
+const aig_graph::func_vec_t& aig_graph::bad_state_functions() const
+{
+  compute_bad_state_functions();
+  return *_bad_state_functions;
+}
+
 const aig_graph::func_vec_t& aig_graph::latch_output_functions() const
 {
   compute_latch_output_functions();
@@ -513,6 +544,13 @@ void aig_graph::create_po( const aig_function& f, const std::string& name )
   _output_functions.make_dirty();
   _outputs.push_back( {f, name} );
   _info[f.node].is_output = 1;
+}
+
+void aig_graph::create_bad_state( const aig_function& f, const std::string& name )
+{
+  _bad_state_functions.make_dirty();
+  _bad_states.push_back( {f, name} );
+  _info[f.node].is_bad = 1;
 }
 
 void aig_graph::create_latch( const aig_function& curr, const aig_function& next, bool default_value )
@@ -699,6 +737,16 @@ aig_graph::output_vec_t& aig_graph::outputs()
 const aig_graph::output_vec_t& aig_graph::outputs() const
 {
   return _outputs;
+}
+
+aig_graph::bad_state_vec_t& aig_graph::bad_states()
+{
+  return _bad_states;
+}
+
+const aig_graph::bad_state_vec_t& aig_graph::bad_states() const
+{
+  return _bad_states;
 }
 
 const aig_node_info& aig_graph::operator[](aig_node node) const
